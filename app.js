@@ -1,0 +1,285 @@
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const $ = id => document.getElementById(id);
+let points = [];
+let selectedName = null;
+let selectedRecord = null;
+let draft = null;
+let admin = false;
+const status = message => { $('status').textContent = message; };
+const sideLabel = side => side === 'left' ? 'Sol kulak' : 'Sağ kulak';
+const norm = value => (value || '').trim().toLocaleLowerCase('tr');
+const pointSide = point => point.earSide || 'left'; // Eski kayıtlar sol kulakta kalır.
+
+// Liste gizleme ayarları bu tarayıcıda tutulur; Firestore kayıtları silinmez.
+const HIDDEN_KEY = 'auricular-atlas-hidden-names-v1';
+let hiddenNames = new Set();
+try {
+    const saved = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]');
+    if (Array.isArray(saved)) hiddenNames = new Set(saved.filter(x => typeof x === 'string'));
+} catch (error) { console.warn('Gizli nokta listesi okunamadı:', error); }
+function saveHidden() {
+    try { localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hiddenNames])); }
+    catch (error) { console.error(error); status('Liste tercihi tarayıcıya kaydedilemedi.'); }
+}
+function updateHiddenControls() {
+    const panel = $('list-tools');
+    panel.hidden = !admin;
+    const restore = $('restore-name');
+    restore.replaceChildren();
+    const hidden = names().filter(name => hiddenNames.has(norm(name)));
+    for (const name of hidden) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        restore.append(option);
+    }
+    $('restore').disabled = hidden.length === 0;
+    $('hide-name').disabled = !selectedName || hiddenNames.has(norm(selectedName));
+    $('hidden-count').textContent = `${hidden.length} gizlenen ad`;
+}
+
+
+// David Alimi Şekil 13.6 üzerindeki okunabilen adların Türkçe karşılıkları.
+// Bunlar yalnızca liste adlarıdır; koordinatlar kaynakla doğrulanıp elle girilir.
+const ALIMI_ADLARI = [
+    'Cosmonot', 'Omega 2', 'Başparmak', 'El', 'El bileği',
+    'Kalça kas segmentleri', 'Bacak kas segmentleri', 'Ayak kas segmentleri',
+    'Duyu kökleri', 'Cauda Equina', 'Dirsek', 'Omuz',
+    'Böbrek', 'Rektum', 'Mesane kası', 'Hemoroidler',
+    'Hipogastrik pleksus', 'Karaciğer pleksusu', 'Karaciğer / Safra kesesi',
+    'Koroner kalp pleksusu', 'Kalp', 'Timus pleksusu',
+    'Tiroid pleksusu', 'Sempatik gangliyonlar', 'Sempatik nokta',
+    'Meme bezi', 'Böbreküstü bezi medullası', 'Böbreküstü bezi korteksi',
+    'Omurga', 'Omurga kas segmentleri', 'Hipokampus',
+    'Amigdala / Septum', 'Beyin sapı', 'Dil', 'Dişler',
+    'Dış kulak', 'Epifiz bezi', 'Hipofiz', 'Hipotalamus',
+    'Uterus / Prostat', 'Fallop tüpü / Epididim', 'Testis / Over',
+    'Vajina / Skrotum / İç dudaklar', 'Glans / Klitoris / Penis',
+    'Dış beyaz komissür', 'Ön beyaz komissür', 'Korpus kallozum',
+    'Trigeminal sinir çekirdekleri', 'Vestibüler korteks',
+    'Lokus seruleus çekirdeği', 'Rafe çekirdeği', 'Serebellum',
+    'ACTH', 'FSH / LH', 'TSH', 'PMS', 'Omega'
+];
+
+function names() {
+    const unique = new Map();
+    for (const p of points) if (p.name && !unique.has(norm(p.name))) unique.set(norm(p.name), p.name);
+    for (const name of ALIMI_ADLARI) if (!unique.has(norm(name))) unique.set(norm(name), name);
+    return [...unique.values()].sort((a, b) => a.localeCompare(b, 'tr'));
+}
+function recordsForName(name) {
+    return points.filter(p => norm(p.name) === norm(name));
+}
+function position(side) {
+    return selectedName ? recordsForName(selectedName).find(p => pointSide(p) === side) : null;
+}
+function resetEditor(clearName = false) {
+    selectedRecord = null;
+    draft = null;
+    $('form').reset();
+    $('coordinates').textContent = 'Haritaya tıklayın';
+    $('editing-side').textContent = 'Kulak seçilmedi';
+    if (!clearName && selectedName) $('name').value = selectedName;
+    render();
+}
+function selectName(name) {
+    selectedName = name;
+    resetEditor();
+    showDetail();
+}
+function showDetail() {
+    const article = $('detail');
+    article.replaceChildren();
+    if (!selectedName) { article.textContent = 'Listeden bir nokta seçin.'; return; }
+    const entries = recordsForName(selectedName);
+    const heading = document.createElement('h3');
+    heading.textContent = selectedName;
+    article.append(heading);
+    const info = document.createElement('p');
+    info.textContent = entries.find(p => p.region)?.region || 'Anatomik bölge henüz doğrulanıp kaydedilmedi.';
+    article.append(info);
+    const desc = entries.find(p => p.description)?.description;
+    if (desc) {
+        const para = document.createElement('p');
+        para.textContent = desc;
+        para.style.whiteSpace = 'pre-wrap';
+        article.append(para);
+    }
+    for (const side of ['left', 'right']) {
+        const p = entries.find(item => pointSide(item) === side);
+        const line = document.createElement('p');
+        line.textContent = `${sideLabel(side)}: ${p ? `X ${p.x.toFixed(1)}%, Y ${p.y.toFixed(1)}%` : 'Konum henüz kaydedilmedi'}`;
+        article.append(line);
+    }
+    const urls = [...new Set(entries.flatMap(p => p.images || []))];
+    for (const url of urls) {
+        if (!/^https:\/\//i.test(url)) continue;
+        const img = document.createElement('img');
+        img.src = url; img.alt = selectedName; img.loading = 'lazy';
+        article.append(img);
+    }
+}
+function render() {
+    const list = $('points');
+    list.replaceChildren();
+    const search = norm($('search').value);
+    let totalMatches = 0;
+    for (const name of names()) {
+        if (hiddenNames.has(norm(name))) continue;
+        const entries = recordsForName(name);
+        if (![name, ...entries.map(p => p.code), ...entries.map(p => p.region)].some(s => norm(s).includes(search))) continue;
+        totalMatches++;
+        const li = document.createElement('li');
+        if (norm(name) === norm(selectedName)) li.classList.add('active');
+        li.textContent = name;
+        const sub = document.createElement('span');
+        sub.className = 'sub';
+        const sides = [...new Set(entries.map(p => pointSide(p)))];
+        sub.textContent = sides.length === 0 ? 'Konum bekleniyor' : sides.length === 2 ? 'Sağ + sol' : sides.map(sideLabel).join(', ');
+        li.append(sub);
+        li.onclick = () => selectName(name);
+        list.append(li);
+    }
+    $('list-count').textContent = search
+        ? `${totalMatches} arama sonucu · listeyi kaydırabilirsiniz`
+        : `${totalMatches} nokta adı · listede 10 satır görünür, aşağı kaydırabilirsiniz`;
+    updateHiddenControls();
+    for (const side of ['left', 'right']) {
+        const layer = $(`markers-${side}`);
+        layer.replaceChildren();
+        const p = position(side);
+        $(`${side}-position`).textContent = p ? `X: ${p.x.toFixed(1)}% · Y: ${p.y.toFixed(1)}%` : 'Konum henüz kayıtlı değil.';
+        if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+            const marker = document.createElement('button');
+            marker.type = 'button'; marker.className = 'marker selected';
+            marker.style.left = `${p.x}%`; marker.style.top = `${p.y}%`;
+            marker.title = `${p.name} — ${sideLabel(side)}`;
+            marker.setAttribute('aria-label', marker.title);
+            marker.onclick = event => { event.stopPropagation(); if (admin) editRecord(p); };
+            layer.append(marker);
+        }
+        if (draft?.side === side) {
+            const marker = document.createElement('span');
+            marker.className = 'marker draft';
+            marker.style.left = `${draft.x}%`; marker.style.top = `${draft.y}%`;
+            layer.append(marker);
+        }
+    }
+}
+function editRecord(p) {
+    selectedName = p.name;
+    selectedRecord = p;
+    draft = { side: pointSide(p), x: p.x, y: p.y };
+    for (const field of ['name', 'code', 'region']) $(field).value = p[field] || '';
+    $('description').value = p.description || '';
+    $('editing-side').textContent = `${sideLabel(draft.side)} — mevcut kayıt düzenleniyor`;
+    $('coordinates').textContent = `${draft.x.toFixed(1)}%, ${draft.y.toFixed(1)}%`;
+    showDetail(); render();
+}
+for (const side of ['left', 'right']) {
+    $(`map-${side}`).onclick = event => {
+        if (!admin || event.target.closest('button')) return;
+        const img = $(`map-${side}`).querySelector('img');
+        const rect = img.getBoundingClientRect();
+        if (!rect.width || !rect.height || event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return;
+        draft = {
+            side,
+            x: Math.max(0, Math.min(100, (event.clientX - rect.left) / rect.width * 100)),
+            y: Math.max(0, Math.min(100, (event.clientY - rect.top) / rect.height * 100))
+        };
+        // Başka kulaktaki kaydı yanlışlıkla güncelleme.
+        if (selectedRecord && pointSide(selectedRecord) !== side) selectedRecord = null;
+        $('editing-side').textContent = `${sideLabel(side)} — ${selectedRecord ? 'konum güncelleniyor' : 'yeni kayıt'}`;
+        $('coordinates').textContent = `${draft.x.toFixed(1)}%, ${draft.y.toFixed(1)}%`;
+        if (selectedName && !$('name').value.trim()) $('name').value = selectedName;
+        render();
+    };
+}
+async function load() {
+    try {
+        const snap = await getDocs(collection(db, 'auricular_points'));
+        points = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render(); showDetail();
+        status(`${names().length} nokta adı listelendi; ${points.length} kulak konumu kayıtlı.`);
+    } catch (error) {
+        console.error(error);
+        status('Firestore okuma hatası: ' + error.message);
+    }
+}
+onAuthStateChanged(auth, async user => {
+    admin = false;
+    if (user) {
+        try { admin = (await user.getIdTokenResult(true)).claims.admin === true; }
+        catch (error) { console.error('Yetki kontrolü:', error); }
+    }
+    $('editor').hidden = !admin;
+    updateHiddenControls();
+    $('logout').hidden = !user;
+    $('login').hidden = !!user;
+    $('email').hidden = !!user;
+    $('password').hidden = !!user;
+    if (user) { await load(); status(`Giriş: ${user.email}${admin ? ' (yönetici)' : ''}`); }
+    else { points = []; selectedName = null; resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
+});
+$('login').onclick = async () => {
+    try { status('Giriş yapılıyor...'); await signInWithEmailAndPassword(auth, $('email').value.trim(), $('password').value); }
+    catch (error) { console.error(error); status('Giriş hatası: ' + error.message); }
+};
+$('logout').onclick = async () => {
+    try { await signOut(auth); } catch (error) { status('Çıkış hatası: ' + error.message); }
+};
+$('search').oninput = render;
+$('hide-name').onclick = () => {
+    if (!admin || !selectedName) return;
+    if (!confirm(`“${selectedName}” listeden gizlensin mi? Firestore kayıtları silinmeyecek.`)) return;
+    hiddenNames.add(norm(selectedName));
+    saveHidden();
+    selectedName = null;
+    resetEditor(true);
+    showDetail();
+    status('Nokta adı listeden gizlendi. Geri yükle bölümünden açabilirsiniz.');
+};
+$('restore').onclick = () => {
+    if (!admin) return;
+    const name = $('restore-name').value;
+    if (!name) return;
+    hiddenNames.delete(norm(name));
+    saveHidden();
+    render();
+    status(`“${name}” yeniden listede gösteriliyor.`);
+};
+$('clear').onclick = () => resetEditor();
+$('form').onsubmit = async event => {
+    event.preventDefault();
+    if (!admin) return status('Yönetici yetkisi gerekli.');
+    if (!draft) return status('Önce sağ veya sol kulak üzerinde konum seçin.');
+    const name = $('name').value.trim();
+    if (!name) return status('Nokta adı gerekli.');
+    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side };
+    // Aynı ad ve aynı kulak için birden fazla kayıt oluşmasını önle.
+    const duplicate = points.find(p => norm(p.name) === norm(name) && pointSide(p) === draft.side && p.id !== selectedRecord?.id);
+    if (duplicate) return status(`${sideLabel(draft.side)} için bu isimde kayıt zaten var. Önce mevcut noktayı seçip düzenleyin.`);
+    try {
+        if (selectedRecord) await updateDoc(doc(db, 'auricular_points', selectedRecord.id), record);
+        else await addDoc(collection(db, 'auricular_points'), record);
+        selectedName = name; resetEditor(); await load(); status('Nokta kaydedildi.');
+    } catch (error) { console.error(error); status('Kayıt hatası: ' + error.message); }
+};
+$('delete').onclick = async () => {
+    if (!admin || !selectedRecord) return status('Silmek için önce mevcut bir işaretleyiciye tıklayın.');
+    if (!confirm(`${selectedRecord.name} (${sideLabel(pointSide(selectedRecord))}) silinsin mi?`)) return;
+    try { await deleteDoc(doc(db, 'auricular_points', selectedRecord.id)); resetEditor(); await load(); status('Seçili kulak kaydı silindi.'); }
+    catch (error) { console.error(error); status('Silme hatası: ' + error.message); }
+};
+render();
+
+// Liste odaktayken yukarı/aşağı oklarla kaydırma (fare tekerleği de çalışır).
+$('points').addEventListener('keydown', event => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        $('points').scrollBy({ top: event.key === 'ArrowDown' ? 46 : -46, behavior: 'smooth' });
+    }
+});

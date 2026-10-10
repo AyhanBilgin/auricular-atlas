@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kulak Akupunkturu Atlası</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Kulak Akupunkturu Atlası</h1>
+  <div id="session">
+    <input id="email" type="email" placeholder="E-posta" autocomplete="username">
+    <input id="password" type="password" placeholder="Şifre" autocomplete="current-password">
+    <button id="login" type="button">Giriş yap</button>
+    <button id="logout" type="button" hidden>Çıkış</button>
+  </div>
+</header>
+<main>
+  <aside>
+    <h2>Nokta listesi</h2>
+    <p class="hint">Alimi referansındaki Türkçe adlar. Konumu girilmemiş noktalar da listelenir.</p>
+    <input id="search" type="search" placeholder="Nokta ara (örn. Cosmonot)">
+    <p id="list-count" class="hint" aria-live="polite"></p>
+    <ul id="points" tabindex="0" aria-label="Nokta listesi, ok tuşlarıyla kaydırılabilir"></ul>
+    <div id="list-tools" class="list-tools" hidden>
+      <button id="hide-name" type="button" class="danger">Seçili adı listeden kaldır</button>
+      <label for="restore-name">Gizlenen noktayı geri getir</label>
+      <select id="restore-name" aria-label="Gizlenen nokta adı"></select>
+      <button id="restore" type="button" class="secondary">Geri yükle</button>
+      <p id="hidden-count" class="hint"></p>
+    </div>
+  </aside>
+  <section class="atlas">
+    <h2>Sağ ve sol kulak</h2>
+    <p id="status" role="status">Giriş bekleniyor...</p>
+    <div class="ears">
+      <div class="ear-panel">
+        <h3>Sol Kulak</h3>
+        <div class="ear-map" id="map-left">
+          <img src="assets/ear-left.png" alt="Sol kulak" draggable="false">
+          <div class="markers" id="markers-left"></div>
+        </div>
+        <p id="left-position" class="position">Konum henüz kayıtlı değil.</p>
+      </div>
+      <div class="ear-panel">
+        <h3>Sağ Kulak</h3>
+        <div class="ear-map" id="map-right">
+          <img src="assets/ear-right.png" alt="Sağ kulak" draggable="false">
+          <div class="markers" id="markers-right"></div>
+        </div>
+        <p id="right-position" class="position">Konum henüz kayıtlı değil.</p>
+      </div>
+    </div>
+    <article id="detail">Listeden bir nokta seçin.</article>
+  </section>
+  <aside id="editor" hidden>
+    <h2>Nokta ekle / düzenle</h2>
+    <p class="hint">Önce sol veya sağ kulak görselinde konum seçin. Aynı isimle iki kulağa ayrı kayıt ekleyebilirsiniz.</p>
+    <p id="editing-side">Kulak seçilmedi</p>
+    <p id="coordinates">Haritaya tıklayın</p>
+    <form id="form">
+      <label for="name">Nokta adı</label><input id="name" required maxlength="150">
+      <label for="code">Kod</label><input id="code">
+      <label for="region">Anatomik bölge</label><input id="region">
+      <label for="description">Açıklama</label><textarea id="description"></textarea>
+      <button type="submit">Kaydet</button>
+      <button id="clear" type="button" class="secondary">Yeni kayıt</button>
+      <button id="delete" type="button" class="danger">Seçili kaydı sil</button>
+    </form>
+  </aside>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

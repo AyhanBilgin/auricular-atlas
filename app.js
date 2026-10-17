@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
 
-import { collection, getDocs, deleteDoc, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { collection, getDocs, getDoc, deleteDoc, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 
 
@@ -18,6 +18,7 @@ let selectedRecord = null;
 let draft = null;
 
 let admin = false;
+let canEdit = false;
 let activeFace = 'front'; // Eski kayıtlar ön yüzde kalır.
 
 const status = message => { $('status').textContent = message; };
@@ -262,7 +263,7 @@ function render() {
             marker.onclick = event => {
                 event.stopPropagation();
                 selectedName = p.name;
-                if (admin) editRecord(p);
+                if (canEdit) editRecord(p);
                 else { showDetail(); render(); }
             };
             layer.append(marker);
@@ -315,7 +316,7 @@ for (const side of ['left', 'right']) {
 
     $(`map-${side}`).onclick = event => {
 
-        if (!admin || event.target.closest('button')) return;
+        if (!canEdit || event.target.closest('button')) return;
 
         const img = $(`map-${side}`).querySelector('img');
 
@@ -375,33 +376,39 @@ async function load() {
 }
 
 onAuthStateChanged(auth, async user => {
+    admin = false;
+    canEdit = false;
 
-    admin = false;
+    if (user) {
+        try {
+            const token = await user.getIdTokenResult(true);
+            admin = token.claims.admin === true;
+            if (admin) {
+                canEdit = true;
+            } else {
+                // Firestore users/{uid}: role=editor, active=true.
+                // Kurallar sunucu tarafında ayrıca kontrol eder.
+                const profile = await getDoc(doc(db, 'users', user.uid));
+                canEdit = profile.exists()
+                    && profile.data().active === true
+                    && profile.data().role === 'editor';
+            }
+        } catch (error) {
+            console.error('Yetki kontrolü:', error);
+            status('Yetki kontrolü hatası: ' + error.message);
+        }
+    }
 
-    if (user) {
+    $('editor').hidden = !canEdit;
+    $('delete').hidden = !admin;
 
-        try { admin = (await user.getIdTokenResult(true)).claims.admin === true; }
+    $('logout').hidden = !user;
+    $('login').hidden = !!user;
+    $('email').hidden = !!user;
+    $('password').hidden = !!user;
 
-        catch (error) { console.error('Yetki kontrolü:', error); }
-
-    }
-
-    $('editor').hidden = !admin;
-
-
-
-    $('logout').hidden = !user;
-
-    $('login').hidden = !!user;
-
-    $('email').hidden = !!user;
-
-    $('password').hidden = !!user;
-
-    if (user) { await load(); }
-
-    else { points = []; pointNames = []; selectedName = null; selectedNames.clear(); resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
-
+    if (user) { await load(); }
+    else { points = []; pointNames = []; selectedName = null; selectedNames.clear(); resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
 });
 
 $('login').onclick = async () => {
@@ -448,7 +455,7 @@ $('form').onsubmit = async event => {
 
     event.preventDefault();
 
-    if (!admin) return status('Yönetici yetkisi gerekli.');
+    if (!canEdit) return status('Kayıt için admin veya editör yetkisi gerekli.');
 
     if (!draft) return status('Önce ilgili kulak ve ön/arka yüz üzerinde konum seçin.');
 

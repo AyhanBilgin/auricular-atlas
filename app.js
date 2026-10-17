@@ -518,3 +518,36 @@ $('points').addEventListener('keydown', event => {
     }
 
 });
+
+/* =========================================
+   MOBIL NOKTA LISTESI AC / KAPAT
+========================================= */
+
+const pointListToggle =
+  document.getElementById('toggle-point-list');
+
+const pointSidebar =
+  document.querySelector('.point-sidebar');
+
+if (pointListToggle && pointSidebar) {
+
+  pointListToggle.addEventListener('click', () => {
+
+    const isOpen =
+      pointSidebar.classList.toggle('list-open');
+
+    pointListToggle.setAttribute(
+      'aria-expanded',
+      String(isOpen)
+    );
+
+    const label =
+      pointListToggle.querySelector('span');
+
+    if (label) {
+      label.textContent = isOpen
+        ? 'Nokta Listesini Kapat'
+        : 'Nokta Listesini Aç';
+    }
+  });
+}

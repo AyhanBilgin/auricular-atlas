@@ -1,21 +1,84 @@
-:root{font-family:system-ui,Arial,sans-serif;color:#172638;background:#f2f6fa}*{box-sizing:border-box}body{margin:0}header{background:#123e54;color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}h1{font-size:1.3rem;margin:0}main{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr) minmax(240px,300px);gap:16px;padding:16px;align-items:start}aside,section{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 12px #0001;min-width:0}h2{margin-top:0;font-size:1.15rem}input,textarea,button{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:8px;max-width:100%}input,textarea{width:100%;margin:5px 0 10px}button{background:#0d9488;color:white;border:0;cursor:pointer;margin:3px}button:hover{background:#0f766e}button.secondary{background:#64748b}button.danger{background:#be123c}ul{padding:0;list-style:none}li{padding:10px;border-bottom:1px solid #e5e7eb;cursor:pointer;border-radius:6px}li:hover,li.active{background:#ccfbf1}li .sub{display:block;font-size:.78rem;color:#64748b;margin-top:3px}.ears{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.ear-panel{border:1px solid #e2e8f0;border-radius:12px;padding:10px;min-width:0}.ear-panel h3{text-align:center;margin:4px 0 10px}.ear-map{width:100%;position:relative;cursor:crosshair}.ear-map img{display:block;width:100%;height:auto;user-select:none}.markers{position:absolute;inset:0;pointer-events:none}.marker{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;border:2px solid white;background:#e11d48;box-shadow:0 1px 6px #0008;pointer-events:auto;cursor:pointer;padding:0;margin:0}.marker.selected{background:#0d9488;width:25px;height:25px;z-index:2}.marker.draft{background:#f59e0b;width:21px;height:21px;z-index:3}.position{text-align:center;font-size:.8rem;color:#64748b}article{margin-top:18px;line-height:1.6}article img{max-width:160px;max-height:160px;object-fit:contain;margin:6px;border-radius:8px}textarea{min-height:80px}#status,.hint{font-size:.85rem;color:#475569}#session input{width:200px;margin:0 4px 0 0}#coordinates{font-weight:bold}#editing-side{font-weight:600;color:#0d9488}label{font-size:.9rem;font-weight:600} [hidden]{display:none!important}@media(max-width:1200px){main{grid-template-columns:220px minmax(0,1fr)}#editor{grid-column:1/-1}}@media(max-width:760px){main{grid-template-columns:1fr}.ears{grid-template-columns:1fr}#editor{grid-column:auto}#session input{width:100%;margin:4px 0}}
-
-/* Nokta listesi: en fazla 10 sonuç, gizle/geri yükle kontrolleri */
+:root{font-family:system-ui,Arial,sans-serif;color:#172638;background:#f2f6fa}
+*{box-sizing:border-box}
+body{margin:0}
+header{background:#123e54;color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+h1{font-size:1.3rem;margin:0}
+main{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr) minmax(240px,300px);gap:16px;padding:16px;align-items:start}
+aside,.atlas{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 12px #0001;min-width:0}
+h2{margin-top:0;font-size:1.15rem}
+input,textarea,button{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:8px;max-width:100%}
+input,textarea{width:100%;margin:5px 0 10px}
+button{background:#0d9488;color:white;border:0;cursor:pointer;margin:3px}
+button:hover{background:#0f766e}
+button.secondary{background:#64748b}
+button.danger{background:#be123c}
+ul{padding:0;list-style:none}
+li{padding:10px;border-bottom:1px solid #e5e7eb;cursor:pointer;border-radius:6px}
+li:hover,li.active{background:#ccfbf1}
+li .sub{display:block;font-size:.78rem;color:#64748b;margin-top:3px}
+.ears{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ear-panel{border:1px solid #e2e8f0;border-radius:12px;padding:10px;min-width:0}
+.ear-panel h3{text-align:center;margin:4px 0 10px}
+.ear-map{width:100%;position:relative;cursor:crosshair}
+.ear-map img{display:block;width:100%;height:auto;user-select:none}
+.markers{position:absolute;inset:0;pointer-events:none}
+.marker{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;border:2px solid white;background:#e11d48;box-shadow:0 1px 6px #0008;pointer-events:auto;cursor:pointer;padding:0;margin:0}
+.marker.selected{background:#0d9488;width:25px;height:25px;z-index:2}
+.marker.draft{background:#f59e0b;width:21px;height:21px;z-index:3}
+.position{text-align:center;font-size:.8rem;color:#64748b}
+textarea{min-height:80px}
+#status,.hint{font-size:.85rem;color:#475569}
+#session input{width:200px;margin:0 4px 0 0}
+#coordinates{font-weight:bold}
+#editing-side{font-weight:600;color:#0d9488}
+label{font-size:.9rem;font-weight:600}
+[hidden]{display:none!important}
 .list-tools{margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0}
 .list-tools button{width:100%;margin:4px 0 10px}
 .list-tools label{display:block;margin-top:8px}
 .list-tools select{width:100%;padding:10px;margin:6px 0;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
 .list-tools button:disabled{opacity:.45;cursor:not-allowed}
 #list-count{margin:4px 0 10px}
+#points{height:460px;max-height:460px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid #e2e8f0;border-radius:8px}
+#points:focus{outline:2px solid #0d9488;outline-offset:2px}
+#points li{min-height:46px}
 
-/* Liste: 10 satır yüksekliğinde, tüm kayıtlar kaydırılabilir */
-#points {
-    max-height: 460px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+/* Nokta bilgi kartı */
+#detail{margin-top:20px;padding:20px;border:1px solid #dce8ee;border-radius:14px;background:#fbfdff;line-height:1.6}
+.detail-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid #e2e8f0}
+.detail-header h3{font-size:1.25rem;margin:0;color:#123e54}
+.detail-code{background:#dff7f2;color:#0f766e;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:700}
+.detail-section{background:transparent;box-shadow:none;border-radius:0;padding:12px 0 0;margin:0}
+.detail-section h4,.detail-subtitle{font-size:.9rem;color:#123e54;margin:0 0 5px}
+.detail-section p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:#475569}
+.detail-subtitle{margin:16px 0 8px}
+.detail-sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.detail-side{background:#edf6f8;border:1px solid #dce8ee;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.detail-side strong{font-size:.9rem}
+.detail-side span{font-size:.82rem;color:#475569;overflow-wrap:anywhere}
+.detail-gallery{display:flex;gap:10px;flex-wrap:wrap}
+.detail-gallery img{width:150px;height:150px;max-width:100%;object-fit:contain;background:white;border:1px solid #e2e8f0;border-radius:10px}
+@media(max-width:1200px){main{grid-template-columns:220px minmax(0,1fr)}#editor{grid-column:1/-1}}
+@media(max-width:760px){main{grid-template-columns:1fr}.ears{grid-template-columns:1fr}#editor{grid-column:auto}#session input{width:100%;margin:4px 0}.detail-sides{grid-template-columns:1fr}}
+
+/* Lokasyon ve kaynak alanları */
+.source-fields{border:1px solid #dce8ee;border-radius:10px;padding:12px;margin:12px 0 16px;min-width:0}
+.source-fields legend{font-weight:700;color:#123e54;padding:0 5px;font-size:.9rem}
+.source-fields label{display:block;margin-top:6px}
+.source-fields textarea{resize:vertical}
+
+/* Noktalar: normal daha küçük, kıvrım altı kesik halkalı */
+.marker{width:13px;height:13px;border-width:1.5px}
+.marker.selected{width:15px;height:15px}
+.marker.draft{width:15px;height:15px}
+.marker.underfold,
+.marker.selected.underfold{
+  width:17px;height:17px;
+  background:rgba(255,255,255,.78);
+  border:2px dashed #7c3aed;
+  box-shadow:0 0 0 1px rgba(124,58,237,.22),0 1px 4px #0005;
 }
-#points:focus { outline: 2px solid #0d9488; outline-offset: 2px; }
-#points li { min-height: 46px; }
+.marker.draft.underfold{
+  border-color:#7c3aed;
+  background:rgba(255,255,255,.85);
+}

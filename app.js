@@ -279,11 +279,11 @@ function render() {
 
             const marker = document.createElement('button');
 
-            marker.type = 'button'; marker.className = 'marker selected';
+            marker.type = 'button'; marker.className = `marker selected ${p.markerType === 'underfold' ? 'underfold' : ''}`;
 
             marker.style.left = `${p.x}%`; marker.style.top = `${p.y}%`;
 
-            marker.title = `${p.name} — ${sideLabel(side)}`;
+            marker.title = `${p.name} — ${sideLabel(side)}${p.markerType === 'underfold' ? ' — kıvrım altında' : ''}`;
 
             marker.setAttribute('aria-label', marker.title);
 
@@ -297,7 +297,7 @@ function render() {
 
             const marker = document.createElement('span');
 
-            marker.className = 'marker draft';
+            marker.className = `marker draft ${$('markerType').value === 'underfold' ? 'underfold' : ''}`;
 
             marker.style.left = `${draft.x}%`; marker.style.top = `${draft.y}%`;
 
@@ -316,6 +316,7 @@ function editRecord(p) {
     selectedRecord = p;
 
     draft = { side: pointSide(p), x: p.x, y: p.y };
+    $('markerType').value = p.markerType === 'underfold' ? 'underfold' : 'visible';
 
     for (const field of ['name', 'code', 'region']) $(field).value = p[field] || '';
 
@@ -436,6 +437,7 @@ $('logout').onclick = async () => {
 };
 
 $('search').oninput = render;
+$('markerType').onchange = render;
 
 $('clear').onclick = () => resetEditor();
 
@@ -451,7 +453,7 @@ $('form').onsubmit = async event => {
 
     if (!name) return status('Nokta adı gerekli.');
 
-    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, cartography: $('cartography').value.trim(), locationDescription: $('locationDescription').value.trim(), sourceTitle: $('sourceTitle').value.trim(), sourcePage: $('sourcePage').value.trim(), sourceFigure: $('sourceFigure').value.trim(), images: selectedRecord?.images || [], earSide: draft.side };
+    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, cartography: $('cartography').value.trim(), locationDescription: $('locationDescription').value.trim(), sourceTitle: $('sourceTitle').value.trim(), sourcePage: $('sourcePage').value.trim(), sourceFigure: $('sourceFigure').value.trim(), images: selectedRecord?.images || [], earSide: draft.side, markerType: $('markerType').value };
 
     // Aynı ad ve aynı kulak için birden fazla kayıt oluşmasını önle.
 

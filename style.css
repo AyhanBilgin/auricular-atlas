@@ -83,32 +83,7 @@ label{font-size:.9rem;font-weight:600}
   background:rgba(255,255,255,.85);
 }
 
-/* =========================================
-   KULAK ATLASI - NOKTA MODELLERİ
-========================================= */
-
-/* Normal nokta */
-.ear-map .marker.selected:not(.underfold) {
-    width: 13px !important;
-    height: 13px !important;
-}
-
-/* Kıvrım altında kalan kayıtlı nokta */
-.ear-map .marker.underfold,
-.ear-map .marker.selected.underfold,
-.ear-map .marker.draft.underfold {
-    width: 17px !important;
-    height: 17px !important;
-
-    background: rgba(255, 255, 255, 0.85) !important;
-    border: 2px dashed #7C3AED !important;
-    border-radius: 50% !important;
-
-    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2) !important;
-}
-
-/* Taslak kıvrım altı noktası */
-.ear-map .marker.draft.underfold {
-    opacity: 1 !important;
-}
-
+/* Çoklu seçimde seçilen her nokta aynı anda vurgulanır */
+#points li.active { background:#ccfbf1; border-color:#5eead4; }
+#points li[role="checkbox"] { cursor:pointer; }
+#points li[role="checkbox"]:focus-visible { outline:2px solid #0d9488; outline-offset:-2px; }

@@ -11,6 +11,7 @@ const $ = id => document.getElementById(id);
 let points = [];
 
 let selectedName = null;
+const selectedNames = new Set(); // Haritada birlikte gösterilecek nokta adları
 
 let selectedRecord = null;
 
@@ -90,12 +91,6 @@ function recordsForName(name) {
 
 }
 
-function position(side) {
-
-    return selectedName ? recordsForName(selectedName).find(p => pointSide(p) === side) : null;
-
-}
-
 function resetEditor(clearName = false) {
 
     selectedRecord = null;
@@ -115,13 +110,21 @@ function resetEditor(clearName = false) {
 }
 
 function selectName(name) {
-
-    selectedName = name;
-
-    resetEditor();
-
-    showDetail();
-
+    const key = norm(name);
+    if (selectedNames.has(key)) {
+        selectedNames.delete(key);
+        if (norm(selectedName) === key) {
+            selectedName = names().find(n => selectedNames.has(norm(n))) || null;
+            resetEditor(true);
+        } else {
+            render();
+        }
+    } else {
+        selectedNames.add(key);
+        selectedName = name;
+        resetEditor();
+    }
+    showDetail();
 }
 
 function showDetail() {
@@ -254,7 +257,10 @@ function render() {
 
         const li = document.createElement('li');
 
-        if (norm(name) === norm(selectedName)) li.classList.add('active');
+        if (selectedNames.has(norm(name))) li.classList.add('active');
+        li.setAttribute('role', 'checkbox');
+        li.setAttribute('aria-checked', String(selectedNames.has(norm(name))));
+        li.tabIndex = 0;
 
         li.textContent = name;
 
@@ -269,6 +275,7 @@ function render() {
         li.append(sub);
 
         li.onclick = () => selectName(name);
+        li.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectName(name); } };
 
         list.append(li);
 
@@ -276,39 +283,41 @@ function render() {
 
     $('list-count').textContent = search
 
-        ? `${totalMatches} arama sonucu · listeyi kaydırabilirsiniz`
+        ? `${totalMatches} arama sonucu · ${selectedNames.size} seçili`
 
-        : `${totalMatches} nokta adı · listede 10 satır görünür, aşağı kaydırabilirsiniz`;
+        : `${totalMatches} nokta adı · ${selectedNames.size} seçili · birden fazla nokta seçebilirsiniz`;
 
 
     for (const side of ['left', 'right']) {
 
         const layer = $(`markers-${side}`);
 
-        layer.replaceChildren();
+        layer.replaceChildren();        const visiblePoints = points.filter(p => selectedNames.has(norm(p.name)) && pointSide(p) === side);
+        const focusPoint = visiblePoints.find(p => norm(p.name) === norm(selectedName));
+        $(`${side}-position`).textContent = focusPoint
+            ? `Seçili nokta: ${focusPoint.name} — X: ${focusPoint.x.toFixed(1)}% · Y: ${focusPoint.y.toFixed(1)}%`
+            : `${visiblePoints.length} nokta gösteriliyor`;
 
-        const p = position(side);
+        for (const p of visiblePoints) {
+            if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+            const marker = document.createElement('button');
+            marker.type = 'button';
+            marker.className = `marker selected ${p.markerType === 'underfold' ? 'underfold' : ''}`;
+            if (p.markerType === 'underfold') applyUnderfoldStyle(marker);
+            marker.style.left = `${p.x}%`;
+            marker.style.top = `${p.y}%`;
+            marker.title = `${p.name} — ${sideLabel(side)}${p.markerType === 'underfold' ? ' — kıvrım altında' : ''}`;
+            marker.setAttribute('aria-label', marker.title);
+            marker.onclick = event => {
+                event.stopPropagation();
+                selectedName = p.name;
+                if (admin) editRecord(p);
+                else { showDetail(); render(); }
+            };
+            layer.append(marker);
+        }
 
-        $(`${side}-position`).textContent = p ? `X: ${p.x.toFixed(1)}% · Y: ${p.y.toFixed(1)}%` : 'Konum henüz kayıtlı değil.';
 
-        if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
-
-            const marker = document.createElement('button');
-
-            marker.type = 'button'; marker.className = `marker selected ${p.markerType === 'underfold' ? 'underfold' : ''}`;
-                if (p.markerType === 'underfold') applyUnderfoldStyle(marker);
-
-            marker.style.left = `${p.x}%`; marker.style.top = `${p.y}%`;
-
-            marker.title = `${p.name} — ${sideLabel(side)}${p.markerType === 'underfold' ? ' — kıvrım altında' : ''}`;
-
-            marker.setAttribute('aria-label', marker.title);
-
-            marker.onclick = event => { event.stopPropagation(); if (admin) editRecord(p); };
-
-            layer.append(marker);
-
-        }
 
         if (draft?.side === side) {
 
@@ -330,6 +339,7 @@ function render() {
 function editRecord(p) {
 
     selectedName = p.name;
+    selectedNames.add(norm(p.name));
 
     selectedRecord = p;
 
@@ -436,7 +446,7 @@ onAuthStateChanged(auth, async user => {
 
     if (user) { await load(); }
 
-    else { points = []; selectedName = null; resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
+    else { points = []; selectedName = null; selectedNames.clear(); resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
 
 });
 
@@ -485,7 +495,7 @@ $('form').onsubmit = async event => {
 
         else await addDoc(collection(db, 'auricular_points'), record);
 
-        selectedName = name; resetEditor(); await load(); status('Nokta kaydedildi.');
+        selectedName = name; selectedNames.add(norm(name)); resetEditor(); await load(); status('Nokta kaydedildi.');
 
     } catch (error) { console.error(error); status('Kayıt hatası: ' + error.message); }
 

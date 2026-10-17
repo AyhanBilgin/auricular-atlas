@@ -95,3 +95,229 @@ label{font-size:.9rem;font-weight:600}
 .face-button{background:#e8f1f5;color:#16415a;border:1px solid #d0dfe6;padding:10px 22px;border-radius:10px;font-weight:650}
 .face-button.active,.face-button[aria-pressed="true"]{background:#0d9488;color:white;border-color:#0d9488}
 .ear-map img{object-fit:contain}
+
+/* =========================================
+   KULAK AKUPUNKTURU ATLASI
+   PWA - MOBIL VE TABLET UYUMU
+   Mevcut CSS kodlarini korur
+========================================= */
+
+/* Telefonlarda yatay tasma engelleme */
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Dokunmatik cihazlarda dugmeler */
+button,
+select,
+input {
+  touch-action: manipulation;
+}
+
+/* Tablet */
+@media (min-width: 761px) and (max-width: 1100px) {
+
+  main {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  #editor {
+    grid-column: 1 / -1;
+  }
+
+  .ears {
+    gap: 10px;
+  }
+
+  .ear-panel {
+    padding: 8px;
+  }
+}
+
+/* Telefon */
+@media (max-width: 760px) {
+
+  header {
+    padding: 14px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  #session {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  #session input {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    font-size: 16px;
+  }
+
+  #session button {
+    min-height: 44px;
+    margin: 0;
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+  }
+
+  .point-sidebar,
+  .atlas,
+  #editor {
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  /* Nokta listesi */
+  #search {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  #points {
+    height: 220px;
+    max-height: 220px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #points li {
+    min-height: 48px;
+    padding: 12px;
+  }
+
+  /* Kulak yuzleri */
+  .ear-face-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .face-button {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 8px;
+  }
+
+  /* Kulaklar alt alta */
+  .ears {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .ear-panel {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .ear-map {
+    width: 100%;
+    position: relative;
+    touch-action: manipulation;
+  }
+
+  .ear-map img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Mevcut nokta koordinatlari korunur */
+  .markers {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Bilgi karti */
+  #detail {
+    margin-top: 14px;
+    padding: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .detail-sides {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-gallery img {
+    width: min(150px, 45%);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  /* Editor */
+  #editor input,
+  #editor select,
+  #editor textarea {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  #editor form > button {
+    width: 100%;
+    min-height: 44px;
+    margin: 5px 0;
+  }
+}
+
+/* Kucuk telefonlar */
+@media (max-width: 380px) {
+
+  main {
+    padding: 7px;
+  }
+
+  .point-sidebar,
+  .atlas,
+  #editor {
+    padding: 10px;
+  }
+
+  .ear-panel {
+    padding: 6px;
+  }
+
+  h1 {
+    font-size: 1.1rem;
+  }
+}
+
+/* iPhone guvenli ekran bosluklari */
+@supports (padding: env(safe-area-inset-bottom)) {
+
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  header {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+}

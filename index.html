@@ -28,9 +28,13 @@
   <section class="atlas">
     <h2>Sağ ve sol kulak</h2>
     <p id="status" role="status">Giriş bekleniyor...</p>
+    <div class="ear-face-switch" role="group" aria-label="Kulak yüzü seçimi">
+      <button type="button" id="face-front" class="face-button active" aria-pressed="true">Ön yüz</button>
+      <button type="button" id="face-back" class="face-button" aria-pressed="false">Arka yüz</button>
+    </div>
     <div class="ears">
       <div class="ear-panel">
-        <h3>Sol Kulak</h3>
+        <h3 id="heading-left">Sol Kulak · Ön yüz</h3>
         <div class="ear-map" id="map-left">
           <img src="assets/ear-left.png" alt="Sol kulak" draggable="false">
           <div class="markers" id="markers-left"></div>
@@ -38,7 +42,7 @@
         <p id="left-position" class="position">Konum henüz kayıtlı değil.</p>
       </div>
       <div class="ear-panel">
-        <h3>Sağ Kulak</h3>
+        <h3 id="heading-right">Sağ Kulak · Ön yüz</h3>
         <div class="ear-map" id="map-right">
           <img src="assets/ear-right.png" alt="Sağ kulak" draggable="false">
           <div class="markers" id="markers-right"></div>
@@ -50,7 +54,7 @@
   </section>
   <aside id="editor" hidden>
     <h2>Nokta ekle / düzenle</h2>
-    <p class="hint">Önce sol veya sağ kulak görselinde konum seçin. Aynı isimle iki kulağa ayrı kayıt ekleyebilirsiniz.</p>
+    <p class="hint">Ön/arka yüzü seçin ve ilgili kulak görseline tıklayın. Aynı isim farklı kulak ve yüzlerde ayrı kaydedilebilir.</p>
     <p id="editing-side">Kulak seçilmedi</p>
     <p id="coordinates">Haritaya tıklayın</p>
     <form id="form">

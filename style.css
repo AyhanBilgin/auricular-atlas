@@ -89,3 +89,9 @@ label{font-size:.9rem;font-weight:600}
 #points li[role="checkbox"]:focus-visible { outline:2px solid #0d9488; outline-offset:-2px; }
 
 #import-names{font-size:.8rem;margin:8px 0;width:100%;white-space:normal}
+
+/* Ön / arka yüz sekmeleri */
+.ear-face-switch{display:flex;gap:8px;margin:12px 0 16px;flex-wrap:wrap}
+.face-button{background:#e8f1f5;color:#16415a;border:1px solid #d0dfe6;padding:10px 22px;border-radius:10px;font-weight:650}
+.face-button.active,.face-button[aria-pressed="true"]{background:#0d9488;color:white;border-color:#0d9488}
+.ear-map img{object-fit:contain}

@@ -18,6 +18,7 @@ let selectedRecord = null;
 let draft = null;
 
 let admin = false;
+let activeFace = 'front'; // Eski kayıtlar ön yüzde kalır.
 
 const status = message => { $('status').textContent = message; };
 
@@ -25,6 +26,8 @@ const sideLabel = side => side === 'left' ? 'Sol kulak' : 'Sağ kulak';
 
 const norm = value => (value || '').trim().toLocaleLowerCase('tr');
 
+const pointFace = point => point.earFace === 'back' ? 'back' : 'front';
+const faceLabel = face => face === 'back' ? 'Arka yüz' : 'Ön yüz';
 const pointSide = point => point.earSide || 'left'; // Eski kayıtlar sol kulakta kalır.
 
 
@@ -128,13 +131,13 @@ function showDetail() {
     section('Açıklama', firstWith('description') || 'Bu nokta için henüz açıklama girilmedi.');
     const gridTitle = document.createElement('h4');
     gridTitle.className = 'detail-subtitle';
-    gridTitle.textContent = 'Kulak konumları';
+    gridTitle.textContent = `Kulak konumları · ${faceLabel(activeFace)}`;
     article.append(gridTitle);
 
     const grid = document.createElement('div');
     grid.className = 'detail-sides';
     for (const side of ['left', 'right']) {
-        const record = entries.find(p => pointSide(p) === side);
+        const record = entries.find(p => pointSide(p) === side && pointFace(p) === activeFace);
         const card = document.createElement('div');
         card.className = 'detail-side';
         const name = document.createElement('strong');
@@ -240,7 +243,7 @@ function render() {
 
         const layer = $(`markers-${side}`);
 
-        layer.replaceChildren();        const visiblePoints = points.filter(p => selectedNames.has(norm(p.name)) && pointSide(p) === side);
+        layer.replaceChildren();        const visiblePoints = points.filter(p => selectedNames.has(norm(p.name)) && pointSide(p) === side && pointFace(p) === activeFace);
         const focusPoint = visiblePoints.find(p => norm(p.name) === norm(selectedName));
         $(`${side}-position`).textContent = focusPoint
             ? `Seçili nokta: ${focusPoint.name} — X: ${focusPoint.x.toFixed(1)}% · Y: ${focusPoint.y.toFixed(1)}%`
@@ -254,7 +257,7 @@ function render() {
             if (p.markerType === 'underfold') applyUnderfoldStyle(marker);
             marker.style.left = `${p.x}%`;
             marker.style.top = `${p.y}%`;
-            marker.title = `${p.name} — ${sideLabel(side)}${p.markerType === 'underfold' ? ' — kıvrım altında' : ''}`;
+            marker.title = `${p.name} — ${sideLabel(side)} · ${faceLabel(activeFace)}${p.markerType === 'underfold' ? ' — kıvrım altında' : ''}`;
             marker.setAttribute('aria-label', marker.title);
             marker.onclick = event => {
                 event.stopPropagation();
@@ -267,7 +270,7 @@ function render() {
 
 
 
-        if (draft?.side === side) {
+        if (draft?.side === side && draft.face === activeFace) {
 
             const marker = document.createElement('span');
 
@@ -291,14 +294,16 @@ function editRecord(p) {
 
     selectedRecord = p;
 
-    draft = { side: pointSide(p), x: p.x, y: p.y };
+    activeFace = pointFace(p);
+    updateFaceView();
+    draft = { side: pointSide(p), face: pointFace(p), x: p.x, y: p.y };
     $('markerType').value = p.markerType === 'underfold' ? 'underfold' : 'visible';
 
     for (const field of ['name', 'code', 'region']) $(field).value = p[field] || '';
 
     $('description').value = p.description || '';
 
-    $('editing-side').textContent = `${sideLabel(draft.side)} — mevcut kayıt düzenleniyor`;
+    $('editing-side').textContent = `${sideLabel(draft.side)} · ${faceLabel(draft.face)} — mevcut kayıt düzenleniyor`;
 
     $('coordinates').textContent = `${draft.x.toFixed(1)}%, ${draft.y.toFixed(1)}%`;
 
@@ -321,6 +326,7 @@ for (const side of ['left', 'right']) {
         draft = {
 
             side,
+            face: activeFace,
 
             x: Math.max(0, Math.min(100, (event.clientX - rect.left) / rect.width * 100)),
 
@@ -330,9 +336,9 @@ for (const side of ['left', 'right']) {
 
         // Başka kulaktaki kaydı yanlışlıkla güncelleme.
 
-        if (selectedRecord && pointSide(selectedRecord) !== side) selectedRecord = null;
+        if (selectedRecord && (pointSide(selectedRecord) !== side || pointFace(selectedRecord) !== activeFace)) selectedRecord = null;
 
-        $('editing-side').textContent = `${sideLabel(side)} — ${selectedRecord ? 'konum güncelleniyor' : 'yeni kayıt'}`;
+        $('editing-side').textContent = `${sideLabel(side)} · ${faceLabel(activeFace)} — ${selectedRecord ? 'konum güncelleniyor' : 'yeni kayıt'}`;
 
         $('coordinates').textContent = `${draft.x.toFixed(1)}%, ${draft.y.toFixed(1)}%`;
 
@@ -412,6 +418,26 @@ $('logout').onclick = async () => {
 
 };
 
+function updateFaceView() {
+    for (const side of ['left', 'right']) {
+        const img = $(`map-${side}`).querySelector('img');
+        img.src = activeFace === 'back' ? `assets/ear-${side}-back.png` : `assets/ear-${side}.png`;
+        img.alt = `${sideLabel(side)} · ${faceLabel(activeFace)}`;
+        $(`heading-${side}`).textContent = `${sideLabel(side)} · ${faceLabel(activeFace)}`;
+    }
+    for (const face of ['front', 'back']) {
+        const btn = $(`face-${face}`);
+        btn.classList.toggle('active', activeFace === face);
+        btn.setAttribute('aria-pressed', String(activeFace === face));
+    }
+}
+for (const face of ['front', 'back']) {
+    $(`face-${face}`).onclick = () => {
+        activeFace = face;
+        if (draft && draft.face !== face) { draft = null; selectedRecord = null; $('coordinates').textContent = 'Haritaya tıklayın'; $('editing-side').textContent = `${faceLabel(face)} — konum seçin`; }
+        updateFaceView(); render(); showDetail();
+    };
+}
 $('search').oninput = render;
 $('markerType').onchange = render;
 
@@ -424,19 +450,19 @@ $('form').onsubmit = async event => {
 
     if (!admin) return status('Yönetici yetkisi gerekli.');
 
-    if (!draft) return status('Önce sağ veya sol kulak üzerinde konum seçin.');
+    if (!draft) return status('Önce ilgili kulak ve ön/arka yüz üzerinde konum seçin.');
 
     const name = $('name').value.trim();
 
     if (!name) return status('Nokta adı gerekli.');
 
-    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side, markerType: $('markerType').value };
+    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side, earFace: draft.face, markerType: $('markerType').value };
 
     // Aynı ad ve aynı kulak için birden fazla kayıt oluşmasını önle.
 
-    const duplicate = points.find(p => norm(p.name) === norm(name) && pointSide(p) === draft.side && p.id !== selectedRecord?.id);
+    const duplicate = points.find(p => norm(p.name) === norm(name) && pointSide(p) === draft.side && pointFace(p) === draft.face && p.id !== selectedRecord?.id);
 
-    if (duplicate) return status(`${sideLabel(draft.side)} için bu isimde kayıt zaten var. Önce mevcut noktayı seçip düzenleyin.`);
+    if (duplicate) return status(`${sideLabel(draft.side)} · ${faceLabel(draft.face)} için bu isimde kayıt zaten var. Önce mevcut noktayı seçip düzenleyin.`);
 
     try {
 
@@ -460,7 +486,7 @@ $('delete').onclick = async () => {
 
     if (!admin || !selectedRecord) return status('Silmek için önce mevcut bir işaretleyiciye tıklayın.');
 
-    if (!confirm(`${selectedRecord.name} (${sideLabel(pointSide(selectedRecord))}) silinsin mi?`)) return;
+    if (!confirm(`${selectedRecord.name} (${sideLabel(pointSide(selectedRecord))} · ${faceLabel(pointFace(selectedRecord))}) silinsin mi?`)) return;
 
     try { await deleteDoc(doc(db, 'auricular_points', selectedRecord.id)); resetEditor(); await load(); status('Seçili kulak kaydı silindi.'); }
 

@@ -445,7 +445,21 @@ for (const face of ['front', 'back']) {
         updateFaceView(); render(); showDetail();
     };
 }
-$('search').oninput = render;
+
+/* Nokta arama - mobil uyumlu */
+
+const searchInput = document.getElementById('search');
+
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    render();
+  });
+
+  searchInput.addEventListener('search', () => {
+    render();
+  });
+}
+
 $('markerType').onchange = render;
 
 

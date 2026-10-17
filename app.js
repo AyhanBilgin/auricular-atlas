@@ -217,6 +217,22 @@ function showDetail() {
     }
 }
 
+// Kıvrım altı işaretleyicisinin görünümünü mevcut CSS kuralları ezmesin.
+function applyUnderfoldStyle(marker) {
+    const styles = {
+        width: '17px',
+        height: '17px',
+        background: 'rgba(255, 255, 255, 0.85)',
+        border: '2px dashed #7C3AED',
+        borderRadius: '50%',
+        boxShadow: '0 0 0 1px rgba(124, 58, 237, 0.2)',
+        opacity: '1'
+    };
+    for (const [property, value] of Object.entries(styles)) {
+        marker.style.setProperty(property.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase()), value, 'important');
+    }
+}
+
 function render() {
 
     const list = $('points');
@@ -280,6 +296,7 @@ function render() {
             const marker = document.createElement('button');
 
             marker.type = 'button'; marker.className = `marker selected ${p.markerType === 'underfold' ? 'underfold' : ''}`;
+                if (p.markerType === 'underfold') applyUnderfoldStyle(marker);
 
             marker.style.left = `${p.x}%`; marker.style.top = `${p.y}%`;
 
@@ -298,6 +315,7 @@ function render() {
             const marker = document.createElement('span');
 
             marker.className = `marker draft ${$('markerType').value === 'underfold' ? 'underfold' : ''}`;
+                if ($('markerType').value === 'underfold') applyUnderfoldStyle(marker);
 
             marker.style.left = `${draft.x}%`; marker.style.top = `${draft.y}%`;
 

@@ -519,35 +519,33 @@ $('points').addEventListener('keydown', event => {
 
 });
 
-/* =========================================
-   MOBIL NOKTA LISTESI AC / KAPAT
-========================================= */
 
-const pointListToggle =
+/* MOBIL NOKTA LISTESI - DUZELTILMIS */
+
+const mobileListButton =
   document.getElementById('toggle-point-list');
 
-const pointSidebar =
+const mobileListSidebar =
   document.querySelector('.point-sidebar');
 
-if (pointListToggle && pointSidebar) {
+if (mobileListButton && mobileListSidebar) {
 
-  pointListToggle.addEventListener('click', () => {
+  mobileListButton.onclick = function () {
 
-    const isOpen =
-      pointSidebar.classList.toggle('list-open');
+    const opened =
+      mobileListSidebar.classList.toggle('list-open');
 
-    pointListToggle.setAttribute(
+    mobileListButton.setAttribute(
       'aria-expanded',
-      String(isOpen)
+      String(opened)
     );
 
-    const label =
-      pointListToggle.querySelector('span');
+    const label = mobileListButton.querySelector('span');
 
     if (label) {
-      label.textContent = isOpen
+      label.textContent = opened
         ? 'Nokta Listesini Kapat'
         : 'Nokta Listesini Aç';
     }
-  });
+  };
 }

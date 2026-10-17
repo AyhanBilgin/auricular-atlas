@@ -1,0 +1,11 @@
+KULAK AKUPUNKTURU ATLASI — PWA KURULUMU
+
+1. Mevcut GitHub deposunda index.html dosyasını bu paketteki index.html ile değiştirin.
+2. Depo köküne manifest.webmanifest ve service-worker.js dosyalarını ekleyin.
+3. icons klasörünü içindeki üç PNG ile birlikte yükleyin.
+4. app.js, style.css, firebase-config.js ve assets klasörünü DEĞİŞTİRMEYİN.
+5. Commit changes yapın, GitHub Pages güncellenince telefonda siteyi açın.
+6. Android Chrome: Uygulamayı yükle / Ana ekrana ekle. iPhone Safari: Paylaş > Ana Ekrana Ekle.
+
+Not: Çevrimdışı atlas verisi erişimi sunulmaz; Firebase için internet gereklidir.
+Not: Bu sürüm mevcut CSS'in mobil uyumluluğunu değiştirmez; telefonda düzenin iyileştirilmesi için style.css incelenmelidir.

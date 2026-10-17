@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js';
 
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { collection, getDocs, deleteDoc, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 
 
@@ -29,49 +29,9 @@ const pointSide = point => point.earSide || 'left'; // Eski kayıtlar sol kulakt
 
 
 
-// David Alimi Şekil 13.6 üzerindeki okunabilen adların Türkçe karşılıkları.
-
-// Bunlar yalnızca liste adlarıdır; koordinatlar kaynakla doğrulanıp elle girilir.
-
-const ALIMI_ADLARI = [
-
-    'Cosmonot', 'Omega 2', 'Başparmak', 'El', 'El bileği',
-
-    'Kalça kas segmentleri', 'Bacak kas segmentleri', 'Ayak kas segmentleri',
-
-    'Duyu kökleri', 'Cauda Equina', 'Dirsek', 'Omuz',
-
-    'Böbrek', 'Rektum', 'Mesane kası', 'Hemoroidler',
-
-    'Hipogastrik pleksus', 'Karaciğer pleksusu', 'Karaciğer / Safra kesesi',
-
-    'Koroner kalp pleksusu', 'Kalp', 'Timus pleksusu',
-
-    'Tiroid pleksusu', 'Sempatik gangliyonlar', 'Sempatik nokta',
-
-    'Meme bezi', 'Böbreküstü bezi medullası', 'Böbreküstü bezi korteksi',
-
-    'Omurga', 'Omurga kas segmentleri', 'Hipokampus',
-
-    'Amigdala / Septum', 'Beyin sapı', 'Dil', 'Dişler',
-
-    'Dış kulak', 'Epifiz bezi', 'Hipofiz', 'Hipotalamus',
-
-    'Uterus / Prostat', 'Fallop tüpü / Epididim', 'Testis / Over',
-
-    'Vajina / Skrotum / İç dudaklar', 'Glans / Klitoris / Penis',
-
-    'Dış beyaz komissür', 'Ön beyaz komissür', 'Korpus kallozum',
-
-    'Trigeminal sinir çekirdekleri', 'Vestibüler korteks',
-
-    'Lokus seruleus çekirdeği', 'Rafe çekirdeği', 'Serebellum',
-
-    'ACTH', 'FSH / LH', 'TSH', 'PMS', 'Omega'
-
-];
-
-
+// Nokta isimleri Firestore auricular_point_names koleksiyonundan yüklenir.
+let pointNames = [];
+const nameDocId = name => encodeURIComponent(norm(name));
 
 function names() {
 
@@ -79,7 +39,7 @@ function names() {
 
     for (const p of points) if (p.name && !unique.has(norm(p.name))) unique.set(norm(p.name), p.name);
 
-    for (const name of ALIMI_ADLARI) if (!unique.has(norm(name))) unique.set(norm(name), name);
+    for (const name of pointNames) if (!unique.has(norm(name))) unique.set(norm(name), name);
 
     return [...unique.values()].sort((a, b) => a.localeCompare(b, 'tr'));
 
@@ -406,6 +366,8 @@ async function load() {
         const snap = await getDocs(collection(db, 'auricular_points'));
 
         points = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const namesSnap = await getDocs(collection(db, 'auricular_point_names'));
+        pointNames = namesSnap.docs.map(d => d.data().name).filter(n => typeof n === 'string' && n.trim());
 
         render(); showDetail();
 
@@ -434,6 +396,7 @@ onAuthStateChanged(auth, async user => {
     }
 
     $('editor').hidden = !admin;
+    $('import-names').hidden = !admin;
 
 
     $('logout').hidden = !user;
@@ -446,7 +409,7 @@ onAuthStateChanged(auth, async user => {
 
     if (user) { await load(); }
 
-    else { points = []; selectedName = null; selectedNames.clear(); resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
+    else { points = []; pointNames = []; selectedName = null; selectedNames.clear(); resetEditor(true); showDetail(); status('Noktaları görmek için giriş yapın.'); }
 
 });
 
@@ -466,6 +429,29 @@ $('logout').onclick = async () => {
 
 $('search').oninput = render;
 $('markerType').onchange = render;
+
+$('import-names').onclick = async () => {
+    if (!admin) return status('Yönetici yetkisi gerekli.');
+    const button = $('import-names');
+    button.disabled = true;
+    try {
+        const { INITIAL_POINT_NAMES } = await import('./initial-point-names.js');
+        const existing = new Set(pointNames.map(norm));
+        const toAdd = INITIAL_POINT_NAMES.filter(name => !existing.has(norm(name)));
+        if (!toAdd.length) { status('Başlangıç nokta adları zaten Firebase üzerinde kayıtlı.'); return; }
+        if (!confirm(`${toAdd.length} başlangıç nokta adı Firebase'e eklensin mi? Mevcut isimler ve koordinatlar korunacak.`)) return;
+        const batch = writeBatch(db);
+        for (const name of toAdd) {
+            batch.set(doc(db, 'auricular_point_names', nameDocId(name)), { name }, { merge: true });
+        }
+        await batch.commit();
+        await load();
+        status(`${toAdd.length} nokta adı Firebase'e aktarıldı.`);
+    } catch (error) {
+        console.error(error);
+        status('İsim aktarımı hatası: ' + error.message);
+    } finally { button.disabled = false; }
+};
 
 $('clear').onclick = () => resetEditor();
 
@@ -491,9 +477,15 @@ $('form').onsubmit = async event => {
 
     try {
 
-        if (selectedRecord) await updateDoc(doc(db, 'auricular_points', selectedRecord.id), record);
-
-        else await addDoc(collection(db, 'auricular_points'), record);
+        const batch = writeBatch(db);
+        const pointRef = selectedRecord
+            ? doc(db, 'auricular_points', selectedRecord.id)
+            : doc(collection(db, 'auricular_points'));
+        if (selectedRecord) batch.update(pointRef, record);
+        else batch.set(pointRef, record);
+        // Nokta adını aynı işlemde liste koleksiyonuna kaydet.
+        batch.set(doc(db, 'auricular_point_names', nameDocId(name)), { name }, { merge: true });
+        await batch.commit();
 
         selectedName = name; selectedNames.add(norm(name)); resetEditor(); await load(); status('Nokta kaydedildi.');
 

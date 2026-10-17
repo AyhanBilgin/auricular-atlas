@@ -87,3 +87,5 @@ label{font-size:.9rem;font-weight:600}
 #points li.active { background:#ccfbf1; border-color:#5eead4; }
 #points li[role="checkbox"] { cursor:pointer; }
 #points li[role="checkbox"]:focus-visible { outline:2px solid #0d9488; outline-offset:-2px; }
+
+#import-names{font-size:.8rem;margin:8px 0;width:100%;white-space:normal}

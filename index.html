@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="tr">
 <head>
@@ -17,20 +18,14 @@
   </div>
 </header>
 <main>
-  <aside>
+  <aside class="point-sidebar">
     <h2>Nokta listesi</h2>
     <p class="hint">Alimi referansındaki Türkçe adlar. Konumu girilmemiş noktalar da listelenir.</p>
     <input id="search" type="search" placeholder="Nokta ara (örn. Cosmonot)">
     <p id="list-count" class="hint" aria-live="polite"></p>
     <ul id="points" tabindex="0" aria-label="Nokta listesi, ok tuşlarıyla kaydırılabilir"></ul>
-    <div id="list-tools" class="list-tools" hidden>
-      <button id="hide-name" type="button" class="danger">Seçili adı listeden kaldır</button>
-      <label for="restore-name">Gizlenen noktayı geri getir</label>
-      <select id="restore-name" aria-label="Gizlenen nokta adı"></select>
-      <button id="restore" type="button" class="secondary">Geri yükle</button>
-      <p id="hidden-count" class="hint"></p>
-    </div>
   </aside>
+
   <section class="atlas">
     <h2>Sağ ve sol kulak</h2>
     <p id="status" role="status">Giriş bekleniyor...</p>
@@ -52,8 +47,9 @@
         <p id="right-position" class="position">Konum henüz kayıtlı değil.</p>
       </div>
     </div>
-    <article id="detail">Listeden bir nokta seçin.</article>
+    <article id="detail" aria-live="polite">Listeden bir nokta seçin.</article>
   </section>
+
   <aside id="editor" hidden>
     <h2>Nokta ekle / düzenle</h2>
     <p class="hint">Önce sol veya sağ kulak görselinde konum seçin. Aynı isimle iki kulağa ayrı kayıt ekleyebilirsiniz.</p>
@@ -64,6 +60,19 @@
       <label for="code">Kod</label><input id="code">
       <label for="region">Anatomik bölge</label><input id="region">
       <label for="description">Açıklama</label><textarea id="description"></textarea>
+      <fieldset class="source-fields">
+        <legend>Nogier/Bahr lokasyon ve kaynak bilgileri</legend>
+        <label for="cartography">Kartografi</label>
+        <input id="cartography" placeholder="Örn. Nogier/Bahr">
+        <label for="locationDescription">Anatomik lokasyon tarifi</label>
+        <textarea id="locationDescription" rows="4" placeholder="Örn. Fossa triangularisin en derin noktasında."></textarea>
+        <label for="sourceTitle">Kaynak kitap / yayın</label>
+        <input id="sourceTitle" placeholder="Örn. Strittmatter, Ear Acupuncture, 2nd ed.">
+        <label for="sourcePage">Sayfa</label>
+        <input id="sourcePage" placeholder="Örn. 34–35">
+        <label for="sourceFigure">Şekil numarası</label>
+        <input id="sourceFigure" placeholder="Örn. 2.25">
+      </fieldset>
       <button type="submit">Kaydet</button>
       <button id="clear" type="button" class="secondary">Yeni kayıt</button>
       <button id="delete" type="button" class="danger">Seçili kaydı sil</button>

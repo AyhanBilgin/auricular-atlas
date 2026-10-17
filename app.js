@@ -126,18 +126,6 @@ function showDetail() {
 
     section('Anatomik bölge', firstWith('region') || 'Anatomik bölge henüz kaydedilmedi.');
     section('Açıklama', firstWith('description') || 'Bu nokta için henüz açıklama girilmedi.');
-    const location = firstWith('locationDescription');
-    const cartography = firstWith('cartography');
-    const sourceTitle = firstWith('sourceTitle');
-    const sourcePage = firstWith('sourcePage');
-    const sourceFigure = firstWith('sourceFigure');
-    if (location || cartography || sourceTitle || sourcePage || sourceFigure) {
-        if (cartography) section('Kartografi', cartography);
-        section('Anatomik lokasyon tarifi', location || 'Lokasyon tarifi henüz kaydedilmedi.');
-        const sourceParts = [sourceTitle, sourcePage ? `s. ${sourcePage}` : '', sourceFigure ? `Şekil ${sourceFigure}` : ''].filter(Boolean);
-        if (sourceParts.length) section('Kaynak', sourceParts.join(' · '));
-    }
-
     const gridTitle = document.createElement('h4');
     gridTitle.className = 'detail-subtitle';
     gridTitle.textContent = 'Kulak konumları';

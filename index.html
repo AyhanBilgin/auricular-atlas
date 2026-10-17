@@ -25,7 +25,25 @@
 </header>
 <main>
   <aside class="point-sidebar">
-    <h2>Nokta listesi</h2>
+  <h2>Nokta listesi</h2>
+
+  <button
+    id="toggle-point-list"
+    type="button"
+    aria-expanded="false"
+    aria-controls="point-list-content">
+    <span>Nokta Listesini Aç</span>
+    <span aria-hidden="true">⌄</span>
+  </button>
+
+  <div id="point-list-content">
+    <p class="hint">Nokta adları Firebase üzerinden yüklenir. Konumu girilmemiş noktalar da listelenir.</p>
+    <input id="search" type="search" placeholder="Nokta ara (örn. Cosmonot)">
+    <p class="hint">Birden fazla nokta seçebilirsiniz. Kaldırmak için seçili ada tekrar tıklayın.</p>
+    <p id="list-count" class="hint" aria-live="polite"></p>
+    <ul id="points" tabindex="0" aria-label="Nokta listesi, birden fazla nokta seçilebilir"></ul>
+  </div>
+</aside>
     <p class="hint">Nokta adları Firebase üzerinden yüklenir. Konumu girilmemiş noktalar da listelenir.</p>
     <input id="search" type="search" placeholder="Nokta ara (örn. Cosmonot)">
     <p class="hint">Birden fazla nokta seçebilirsiniz. Kaldırmak için seçili ada tekrar tıklayın.</p>

@@ -299,7 +299,7 @@ function editRecord(p) {
     draft = { side: pointSide(p), face: pointFace(p), x: p.x, y: p.y };
     $('markerType').value = p.markerType === 'underfold' ? 'underfold' : 'visible';
 
-    for (const field of ['name', 'code', 'region']) $(field).value = p[field] || '';
+    for (const field of ['name', 'region']) $(field).value = p[field] || '';
 
     $('description').value = p.description || '';
 
@@ -456,7 +456,7 @@ $('form').onsubmit = async event => {
 
     if (!name) return status('Nokta adı gerekli.');
 
-    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side, earFace: draft.face, markerType: $('markerType').value };
+    const record = { name, code: selectedRecord?.code || '', region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side, earFace: draft.face, markerType: $('markerType').value };
 
     // Aynı ad ve aynı kulak için birden fazla kayıt oluşmasını önle.
 

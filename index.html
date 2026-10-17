@@ -23,7 +23,6 @@
     <input id="search" type="search" placeholder="Nokta ara (örn. Cosmonot)">
     <p class="hint">Birden fazla nokta seçebilirsiniz. Kaldırmak için seçili ada tekrar tıklayın.</p>
     <p id="list-count" class="hint" aria-live="polite"></p>
-    <button id="import-names" type="button" class="secondary" hidden>Başlangıç adlarını Firebase’e aktar (bir kez)</button>
     <ul id="points" tabindex="0" aria-label="Nokta listesi, birden fazla nokta seçilebilir"></ul>
   </aside>
   <section class="atlas">
@@ -64,19 +63,6 @@
       </select>
       <label for="region">Anatomik bölge</label><input id="region">
       <label for="description">Açıklama</label><textarea id="description"></textarea>
-      <fieldset class="source-fields">
-        <legend>Nogier/Bahr lokasyon ve kaynak bilgileri</legend>
-        <label for="cartography">Kartografi</label>
-        <input id="cartography" placeholder="Örn. Nogier/Bahr">
-        <label for="locationDescription">Anatomik lokasyon tarifi</label>
-        <textarea id="locationDescription" rows="4" placeholder="Örn. Fossa triangularisin en derin noktasında."></textarea>
-        <label for="sourceTitle">Kaynak kitap / yayın</label>
-        <input id="sourceTitle" placeholder="Örn. Strittmatter, Ear Acupuncture, 2nd ed.">
-        <label for="sourcePage">Sayfa</label>
-        <input id="sourcePage" placeholder="Örn. 34–35">
-        <label for="sourceFigure">Şekil numarası</label>
-        <input id="sourceFigure" placeholder="Örn. 2.25">
-      </fieldset>
       <button type="submit">Kaydet</button>
       <button id="clear" type="button" class="secondary">Yeni kayıt</button>
       <button id="delete" type="button" class="danger">Seçili kaydı sil</button>

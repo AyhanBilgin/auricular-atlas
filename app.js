@@ -309,9 +309,6 @@ function editRecord(p) {
     for (const field of ['name', 'code', 'region']) $(field).value = p[field] || '';
 
     $('description').value = p.description || '';
-    for (const field of ['cartography', 'locationDescription', 'sourceTitle', 'sourcePage', 'sourceFigure']) {
-        $(field).value = p[field] || '';
-    }
 
     $('editing-side').textContent = `${sideLabel(draft.side)} — mevcut kayıt düzenleniyor`;
 
@@ -396,7 +393,7 @@ onAuthStateChanged(auth, async user => {
     }
 
     $('editor').hidden = !admin;
-    $('import-names').hidden = !admin;
+
 
 
     $('logout').hidden = !user;
@@ -430,28 +427,6 @@ $('logout').onclick = async () => {
 $('search').oninput = render;
 $('markerType').onchange = render;
 
-$('import-names').onclick = async () => {
-    if (!admin) return status('Yönetici yetkisi gerekli.');
-    const button = $('import-names');
-    button.disabled = true;
-    try {
-        const { INITIAL_POINT_NAMES } = await import('./initial-point-names.js');
-        const existing = new Set(pointNames.map(norm));
-        const toAdd = INITIAL_POINT_NAMES.filter(name => !existing.has(norm(name)));
-        if (!toAdd.length) { status('Başlangıç nokta adları zaten Firebase üzerinde kayıtlı.'); return; }
-        if (!confirm(`${toAdd.length} başlangıç nokta adı Firebase'e eklensin mi? Mevcut isimler ve koordinatlar korunacak.`)) return;
-        const batch = writeBatch(db);
-        for (const name of toAdd) {
-            batch.set(doc(db, 'auricular_point_names', nameDocId(name)), { name }, { merge: true });
-        }
-        await batch.commit();
-        await load();
-        status(`${toAdd.length} nokta adı Firebase'e aktarıldı.`);
-    } catch (error) {
-        console.error(error);
-        status('İsim aktarımı hatası: ' + error.message);
-    } finally { button.disabled = false; }
-};
 
 $('clear').onclick = () => resetEditor();
 
@@ -467,7 +442,7 @@ $('form').onsubmit = async event => {
 
     if (!name) return status('Nokta adı gerekli.');
 
-    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, cartography: $('cartography').value.trim(), locationDescription: $('locationDescription').value.trim(), sourceTitle: $('sourceTitle').value.trim(), sourcePage: $('sourcePage').value.trim(), sourceFigure: $('sourceFigure').value.trim(), images: selectedRecord?.images || [], earSide: draft.side, markerType: $('markerType').value };
+    const record = { name, code: $('code').value.trim(), region: $('region').value.trim(), description: $('description').value.trim(), x: draft.x, y: draft.y, images: selectedRecord?.images || [], earSide: draft.side, markerType: $('markerType').value };
 
     // Aynı ad ve aynı kulak için birden fazla kayıt oluşmasını önle.
 

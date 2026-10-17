@@ -321,3 +321,53 @@ input {
     padding-top: max(14px, env(safe-area-inset-top));
   }
 }
+
+/* =========================================
+   MOBIL ACILIR / KAPANIR NOKTA LISTESI
+========================================= */
+
+/* Masaustu: liste acik, dugme gizli */
+#toggle-point-list {
+  display: none;
+}
+
+#point-list-content {
+  display: block;
+}
+
+/* Telefon */
+@media (max-width: 760px) {
+
+  #toggle-point-list {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 15px;
+    margin: 8px 0 0;
+    border-radius: 10px;
+    background: #0d9488;
+    color: #fff;
+    font-weight: 650;
+    min-height: 48px;
+  }
+
+  #toggle-point-list span:last-child {
+    font-size: 22px;
+    transition: transform .2s ease;
+  }
+
+  .point-sidebar:not(.list-open) #point-list-content {
+    display: none;
+  }
+
+  .point-sidebar.list-open #point-list-content {
+    display: block;
+    padding-top: 12px;
+  }
+
+  .point-sidebar.list-open
+  #toggle-point-list span:last-child {
+    transform: rotate(180deg);
+  }
+}
